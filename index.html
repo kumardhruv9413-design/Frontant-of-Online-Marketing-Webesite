@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CampusMart - Online Student Marketplace Platform for buying, selling, and managing campus essentials." />
+  <meta name="keywords" content="CampusMart, Online Marketplace, Student Store, Electronics, Books, LPU" />
+  <meta name="author" content="Shani Yadav" />
+  <title>CampusMart | Online Marketplace Platform</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Skip Link for Accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header & Navigation (Semantic HTML + Flexbox) -->
+  <header class="site-header">
+    <div class="brand">
+      <!-- Inline SVG Graphics Logo -->
+      <svg width="34" height="34" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+        <rect width="36" height="36" rx="8" fill="#2563EB" />
+        <path d="M9 12H27L25 23H11L9 12Z" stroke="#FFFFFF" stroke-width="2.2" stroke-linejoin="round" />
+        <circle cx="13.5" cy="27" r="2" fill="#F59E0B" />
+        <circle cx="22.5" cy="27" r="2" fill="#F59E0B" />
+      </svg>
+      <div>
+        <h1>Campus<span>Mart</span></h1>
+        <p class="tagline">Student Marketplace &amp; Catalogue</p>
+      </div>
+    </div>
+
+    <nav aria-label="Primary Navigation" class="main-nav">
+      <button type="button" class="nav-btn active" data-view="catalogue" onclick="switchView('catalogue')">Catalogue</button>
+      <button type="button" class="nav-btn" data-view="cart" onclick="switchView('cart')">
+        Cart <span id="cart-badge" class="badge">0</span>
+      </button>
+      <button type="button" class="nav-btn" data-view="orders" onclick="switchView('orders')">Orders</button>
+      <button type="button" class="nav-btn hidden" id="nav-admin-btn" data-view="admin" onclick="switchView('admin')">Admin Panel</button>
+      <button type="button" class="nav-btn" data-view="about" onclick="switchView('about')">Guide &amp; Media</button>
+      <button type="button" class="nav-btn auth-trigger" id="auth-btn" onclick="openAuthModal()">Login / Register</button>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="container">
+    <!-- Session Status Bar -->
+    <aside class="status-bar" aria-live="polite">
+      <span id="session-status">Browsing as <strong>Guest</strong>. Log in as <strong>Admin</strong> to manage products or <strong>Customer</strong> to place orders.</span>
+      <button type="button" class="link-btn" onclick="resetDemoData()">Reset Demo Data</button>
+    </aside>
+
+    <!-- ================= 1. PRODUCT CATALOGUE VIEW ================= -->
+    <section id="view-catalogue" class="view-section" aria-labelledby="catalogue-heading">
+      <div class="section-header">
+        <h2 id="catalogue-heading">Marketplace Catalogue</h2>
+        <p>Browse verified listings across categories, filter by price, and inspect full specifications.</p>
+      </div>
+
+      <!-- Search, Filter, and Sort Controls -->
+      <form class="controls-bar" onsubmit="event.preventDefault();" role="search">
+        <div class="control-group search-group">
+          <label for="search-input" class="sr-only">Search products</label>
+          <input type="search" id="search-input" placeholder="Search by item name, brand, or description..." oninput="renderCatalogue()" />
+        </div>
+
+        <div class="control-group">
+          <label for="category-filter" class="sr-only">Filter by category</label>
+          <select id="category-filter" onchange="renderCatalogue()">
+            <option value="All">All Categories</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Books">Books &amp; Notes</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Hostel Gear">Hostel Gear</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="sort-select" class="sr-only">Sort products</label>
+          <select id="sort-select" onchange="renderCatalogue()">
+            <option value="featured">Sort: Featured</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="rating-desc">Rating: Highest First</option>
+          </select>
+        </div>
+      </form>
+
+      <!-- Responsive CSS Grid Catalogue -->
+      <div id="product-grid" class="product-grid"></div>
+    </section>
+
+    <!-- ================= 2. CART & CHECKOUT VIEW ================= -->
+    <section id="view-cart" class="view-section hidden" aria-labelledby="cart-heading">
+      <div class="section-header">
+        <h2 id="cart-heading">Shopping Cart &amp; Checkout</h2>
+        <p>Review selected quantities, verify stock availability, and complete your campus order.</p>
+      </div>
+      <div id="cart-content"></div>
+    </section>
+
+    <!-- ================= 3. ORDER HISTORY VIEW ================= -->
+    <section id="view-orders" class="view-section hidden" aria-labelledby="orders-heading">
+      <div class="section-header">
+        <h2 id="orders-heading">Order History</h2>
+        <p>Track all completed transactions and itemized receipts.</p>
+      </div>
+      <div id="orders-content"></div>
+    </section>
+
+    <!-- ================= 4. ADMIN CRUD VIEW ================= -->
+    <section id="view-admin" class="view-section hidden" aria-labelledby="admin-heading">
+      <div class="section-header">
+        <h2 id="admin-heading">Admin Inventory &amp; Catalogue CRUD</h2>
+        <p>Create, update, or remove marketplace items with real-time validation.</p>
+      </div>
+
+      <article class="panel">
+        <h3 id="admin-form-title">Add New Product</h3>
+        <form id="admin-form" onsubmit="handleAdminFormSubmit(event)" novalidate>
+          <input type="hidden" id="edit-id" />
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="prod-name">Product Name *</label>
+              <input type="text" id="prod-name" placeholder="e.g., Casio FX-991EX Calculator" required />
+              <small class="error-text" id="err-prod-name"></small>
+            </div>
+
+            <div class="form-field">
+              <label for="prod-category">Category *</label>
+              <select id="prod-category" required>
+                <option value="Electronics">Electronics</option>
+                <option value="Books">Books &amp; Notes</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Hostel Gear">Hostel Gear</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="prod-price">Price (INR ₹) *</label>
+              <input type="number" id="prod-price" min="1" step="1" placeholder="e.g., 950" required />
+              <small class="error-text" id="err-prod-price"></small>
+            </div>
+
+            <div class="form-field">
+              <label for="prod-stock">Stock Units *</label>
+              <input type="number" id="prod-stock" min="0" step="1" placeholder="e.g., 10" required />
+              <small class="error-text" id="err-prod-stock"></small>
+            </div>
+
+            <div class="form-field">
+              <label for="prod-badge">Condition / Tag</label>
+              <input type="text" id="prod-badge" placeholder="e.g., New / Verified" maxlength="16" />
+            </div>
+
+            <div class="form-field">
+              <label for="prod-icon">Display Icon</label>
+              <input type="text" id="prod-icon" placeholder="e.g., 💻" maxlength="4" />
+            </div>
+          </div>
+
+          <div class="form-field full-width">
+            <label for="prod-desc">Technical Description *</label>
+            <textarea id="prod-desc" rows="3" placeholder="Provide key specifications, warranty, or condition notes..." required></textarea>
+            <small class="error-text" id="err-prod-desc"></small>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Product</button>
+            <button type="button" class="btn btn-outline" onclick="resetAdminForm()">Clear Form</button>
+          </div>
+        </form>
+      </article>
+
+      <article class="panel">
+        <h3>Current Catalogue Table</h3>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Product</th>
+                <th scope="col">Category</th>
+                <th scope="col">Price</th>
+                <th scope="col">Stock</th>
+                <th scope="col">Rating</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ================= 5. SYLLABUS SHOWCASE (MULTIMEDIA, LISTS, SVG, IFRAME) ================= -->
+    <section id="view-about" class="view-section hidden" aria-labelledby="about-heading">
+      <div class="section-header">
+        <h2 id="about-heading">Marketplace Guide &amp; Multimedia</h2>
+        <p>How CampusMart works, platform policies, and interactive campus pickup map.</p>
+      </div>
+
+      <div class="info-grid">
+        <article class="panel">
+          <h3>How to Buy &amp; Sell</h3>
+          <ol class="styled-list">
+            <li><strong>Create an Account:</strong> Register as a <em>Customer</em> to shop or <em>Admin</em> to manage listings.</li>
+            <li><strong>Filter &amp; Compare:</strong> Use live search, category filters, and sorting to compare items.</li>
+            <li><strong>Inspect Details:</strong> Open any product card to read verified peer ratings and specifications.</li>
+            <li><strong>Checkout Securely:</strong> Add items to your cart, confirm stock, and submit your campus delivery address.</li>
+          </ol>
+
+          <h4 class="sub-heading">Platform Standards</h4>
+          <ul class="styled-list">
+            <li>Zero commission fees for registered students</li>
+            <li>Instant stock deduction upon checkout confirmation</li>
+            <li>Transparent 5-star review system</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h3>Multimedia &amp; Campus Pickup Location</h3>
+          <p class="muted-text">Audio Announcement &amp; Video Preview:</p>
+
+          <!-- HTML5 Audio Element -->
+          <div class="media-box">
+            <label for="promo-audio"><strong>CampusMart Audio Notice:</strong></label>
+            <audio id="promo-audio" controls preload="none">
+              <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg" />
+              Your browser does not support the HTML5 audio element.
+            </audio>
+          </div>
+
+          <!-- HTML5 Video Element -->
+          <div class="media-box">
+            <label for="promo-video"><strong>Platform Walkthrough Clip:</strong></label>
+            <video id="promo-video" controls width="100%" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='220'><rect width='600' height='220' fill='%230f172a'/><text x='50%' y='50%' fill='%23f8fafc' font-family='sans-serif' font-size='20' text-anchor='middle'>CampusMart Demo Preview</text></svg>">
+              <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4" />
+              Your browser does not support the HTML5 video tag.
+            </video>
+          </div>
+
+          <!-- HTML5 Iframe Element -->
+          <div class="media-box">
+            <label><strong>Campus Pickup Hub (Embedded Map):</strong></label>
+            <iframe
+              title="Campus Pickup Location Map"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=75.6980%2C31.2500%2C75.7120%2C31.2600&amp;layer=mapnik"
+              loading="lazy">
+            </iframe>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= PRODUCT DETAILS & REVIEWS MODAL ================= -->
+  <div id="detail-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-prod-title" onclick="backdropClose(event, 'detail-modal')">
+    <div class="modal-box" id="detail-modal-body"></div>
+  </div>
+
+  <!-- ================= LOGIN / REGISTRATION MODAL ================= -->
+  <div id="auth-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" onclick="backdropClose(event, 'auth-modal')">
+    <div class="modal-box">
+      <button type="button" class="modal-close" aria-label="Close modal" onclick="closeModal('auth-modal')">&times;</button>
+      <h2 id="auth-modal-title">Account Registration &amp; Login</h2>
+      <p class="muted-text">Sign in to unlock checkout, reviews, or Admin CRUD controls.</p>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)" novalidate>
+        <div class="form-field">
+          <label for="auth-name">Full Name *</label>
+          <input type="text" id="auth-name" placeholder="Enter your full name" required />
+          <small class="error-text" id="err-auth-name"></small>
+        </div>
+
+        <div class="form-field">
+          <label for="auth-email">Email Address *</label>
+          <input type="email" id="auth-email" placeholder="student@university.edu" required />
+          <small class="error-text" id="err-auth-email"></small>
+        </div>
+
+        <div class="form-field">
+          <label for="auth-password">Password (Min. 6 Characters) *</label>
+          <input type="password" id="auth-password" placeholder="••••••" required />
+          <small class="error-text" id="err-auth-password"></small>
+        </div>
+
+        <fieldset class="role-fieldset">
+          <legend>Select Account Role *</legend>
+          <label class="radio-label">
+            <input type="radio" name="auth-role" value="customer" checked />
+            Customer (Shop, Cart, Checkout &amp; Reviews)
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="auth-role" value="admin" />
+            Admin (Full Catalogue CRUD Management)
+          </label>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary full-btn">Sign In / Register</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>&copy; 2026 <strong>CampusMart</strong> — Built with Semantic HTML5, Modern CSS3, and Vanilla JavaScript.</p>
+    <p><a href="#main-content">Back to top &uarr;</a></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
